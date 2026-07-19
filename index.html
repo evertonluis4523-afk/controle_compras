@@ -22,7 +22,6 @@
   --sans:"Archivo",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
   --shadow:0 1px 2px rgba(20,24,32,.06),0 8px 24px rgba(20,24,32,.06);
   --field:#fff; --soft:#f7f8f9; --locked:#f3f4f6;
-  --ab1:#222428; --ab2:#161616; /* gradiente da barra (configurável) */
 }
 html[data-theme="dark"]{
   --ink:#e7e9ee; --muted:#9aa3b2; --gray:#b8bcc6;
@@ -40,7 +39,7 @@ button{font-family:inherit}
 input,select,textarea{font-family:inherit;color:var(--ink)}
 
 /* ===== appbar (configurável) ===== */
-ppbar{position:sticky;top:0;z-index:30;background:var(--surface);color:var(--ink);
+.appbar{position:sticky;top:0;z-index:30;background:var(--surface);color:var(--ink);
   padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;box-shadow:none;border-bottom:1px solid var(--line)}
 .appbar.accentline{border-top:3px solid var(--red)}
 .appbar .in{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:10px}
@@ -115,9 +114,10 @@ html[data-theme="dark"] .tag.cat{background:#2a313c;color:#aeb6c2}
 .overlay{position:fixed;inset:0;background:rgba(15,17,22,.55);display:none;align-items:flex-start;justify-content:center;padding:max(env(safe-area-inset-top),18px) 14px 18px;z-index:50;overflow:auto}
 .overlay.open{display:flex}
 .modal{background:var(--surface);width:100%;max-width:560px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;margin:auto}
-.mhead{background:linear-gradient(180deg,var(--ab1),var(--ab2));color:#fff;padding:14px 18px;display:flex;align-items:center;gap:10px}
+.mhead{background:var(--surface);color:var(--ink);border-bottom:1px solid var(--line);padding:14px 18px;display:flex;align-items:center;gap:10px}
 .mhead h2{margin:0;font-size:16px;font-weight:700}
-.mhead .x{margin-left:auto;background:transparent;border:0;color:#fff;font-size:24px;line-height:1;cursor:pointer;padding:0 4px}
+.mhead .x{margin-left:auto;background:transparent;border:0;color:var(--muted);font-size:24px;line-height:1;cursor:pointer;padding:0 4px}
+.mhead .x:hover{color:var(--red)}
 .mbody{padding:16px 18px}
 .mfoot{padding:13px 18px;background:var(--soft);border-top:1px solid var(--line);display:flex;gap:9px;align-items:center;flex-wrap:wrap}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -348,7 +348,7 @@ const KEY='rm_compras_v1';
 let storageOK=true, mem={};
 try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){storageOK=false;}
 const DEFAULT_PRAZOS=['à vista','7 dias','15 dias','28 dias','30 dias','30/60','30/60/90','30/60/90/120'];
-const DEFAULT_CFG={appbar:'dark',accent:'#aa221f',tema:'light',catPadrao:'',prazoPadrao:'',alertaDias:7};
+const DEFAULT_CFG={accent:'#aa221f',tema:'light',catPadrao:'',prazoPadrao:'',alertaDias:7};
 let DB={compras:[],fornecedores:[],categorias:[],prazos:DEFAULT_PRAZOS.slice(),cfg:Object.assign({},DEFAULT_CFG),_editedAt:0};
 let payFilter='todos', editingId=null, FP=[], viewMode='compras';
 
@@ -632,16 +632,11 @@ function renderAgenda(f){
 
 /* ============ configurações ============ */
 const ACCENTS=[['#aa221f','Vermelho RM'],['#1f5fae','Azul'],['#1f7a4d','Verde'],['#7a4dab','Roxo'],['#b4690e','Âmbar'],['#222428','Grafite']];
-const APPBARS={dark:['#222428','#161616'],graphite:['#3a3f47','#23262b'],red:['#c0392b','#7d1714']};
 function applyCfg(){
   const c=DB.cfg||DEFAULT_CFG;
   document.documentElement.style.setProperty('--red',c.accent||'#aa221f');
   document.documentElement.style.setProperty('--red-d',shade(c.accent||'#aa221f',.28));
-  const ab=APPBARS[c.appbar]||APPBARS.dark;
-  document.documentElement.style.setProperty('--ab1',ab[0]);
-  document.documentElement.style.setProperty('--ab2',ab[1]);
   document.documentElement.setAttribute('data-theme',c.tema==='dark'?'dark':'light');
-  document.querySelector('meta[name=theme-color]').setAttribute('content',ab[1]);
 }
 function shade(hex,p){ const m=/^#?([0-9a-f]{6})$/i.exec(hex||''); if(!m)return hex; const n=parseInt(m[1],16); let r=(n>>16)&255,g=(n>>8)&255,b=n&255; r=Math.round(r*(1-p));g=Math.round(g*(1-p));b=Math.round(b*(1-p)); return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1); }
 function setCfg(k,v){ DB.cfg[k]=v; save(); applyCfg(); renderSettings(); render(); }
@@ -657,7 +652,6 @@ function renderSettings(){
   const prazoOpts='<option value="">— nenhum —</option>'+(DB.prazos||[]).map(x=>`<option value="${esc(x)}"${c.prazoPadrao===x?' selected':''}>${esc(x)}</option>`).join('');
   host.innerHTML=`
   <div class="cfg-sec"><h3>Aparência</h3>
-    <div class="cfg-tog"><div><div class="t">Barra superior</div><div class="s">Cor do topo do app.</div></div>${seg('appbar',[['dark','Escuro'],['graphite','Grafite'],['red','Vermelho']])}</div>
     <div class="cfg-tog"><div><div class="t">Cor de destaque</div><div class="s">Botões e marcações.</div></div><div class="cfg-color">${colors}</div></div>
     <div class="cfg-tog"><div><div class="t">Tema</div></div>${seg('tema',[['light','Claro'],['dark','Escuro']])}</div>
   </div>
