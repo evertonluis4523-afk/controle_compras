@@ -40,8 +40,8 @@ button{font-family:inherit}
 input,select,textarea{font-family:inherit;color:var(--ink)}
 
 /* ===== appbar (configurável) ===== */
-.appbar{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,var(--ab1),var(--ab2));color:#fff;
-  padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;box-shadow:0 2px 14px rgba(0,0,0,.18);border-bottom:1px solid rgba(255,255,255,.06)}
+ppbar{position:sticky;top:0;z-index:30;background:var(--surface);color:var(--ink);
+  padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;box-shadow:none;border-bottom:1px solid var(--line)}
 .appbar.accentline{border-top:3px solid var(--red)}
 .appbar .in{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:10px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:.01em}
@@ -49,11 +49,11 @@ input,select,textarea{font-family:inherit;color:var(--ink)}
 .brand .logo svg{width:18px;height:18px;color:#fff}
 .brand .tt{display:flex;flex-direction:column;line-height:1.05}
 .brand .tt b{font-weight:800;font-size:15px}
-.brand .tt small{font-size:10.5px;font-weight:600;color:rgba(255,255,255,.6);letter-spacing:.06em;text-transform:uppercase}
+.brand .tt small{font-size:10.5px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
 .spacer{flex:1}
-#syncChip{font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px;white-space:nowrap;background:rgba(255,255,255,.12);color:#cfd3da;cursor:pointer;border:0}
-.ab-icon{background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:9px;width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
-.ab-icon:hover{background:rgba(255,255,255,.22)}
+#syncChip{font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px;white-space:nowrap;background:var(--soft);color:var(--muted);cursor:pointer;border:1px solid var(--line)}
+.ab-icon{background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:9px;width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.ab-icon:hover{background:var(--line-2)}
 .ab-icon svg{width:18px;height:18px}
 .ab-btn{background:#fff;color:var(--red);border:0;border-radius:9px;padding:9px 14px;font-size:13.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
 .ab-btn:hover{filter:brightness(.96)}
@@ -721,7 +721,7 @@ function toast(msg){ let el=document.getElementById('toast');
 /* ============ Firebase (rm-contas / nó compras_rm) ============ */
 const FB={ config:{apiKey:"AIzaSyBDOR9f748UNoGP5c72Y-vdmDBcffM8tMI",databaseURL:"https://rm-contas-default-rtdb.firebaseio.com",appId:"1:414740463069:web:f8035314dcfbf962c80a34"}, node:'compras_rm', ref:null, ready:false, applying:false, booting:true, timer:null };
 function setSync(state){ const c=document.getElementById('syncChip'); if(!c)return;
-  const map={ok:['● nuvem','rgba(31,122,77,.25)','#7fe0a8'],saving:['● salvando…','rgba(180,105,14,.25)','#ffd98a'],off:['● local','rgba(255,255,255,.12)','#cfd3da'],pend:['● pendente','rgba(180,105,14,.25)','#ffd98a']};
+  const map={ok:['● nuvem','#e7f3ec','#1f7a4d'],saving:['● salvando…','#fdf3e2','#b4690e'],off:['● local','#f7f8f9','#6c7480'],pend:['● pendente','#fdf3e2','#b4690e']};
   const m=map[state]||map.off; c.textContent=m[0]; c.style.background=m[1]; c.style.color=m[2]; }
 function cloudData(){ const o=JSON.parse(JSON.stringify(DB)); o._updatedAt=Date.now(); return o; }
 /* ===== Caixa de entrada do Orçamento (compras_inbox) ===== */
