@@ -199,9 +199,54 @@ textarea.din{resize:vertical;min-height:58px}
 #inboxBanner .tx b{font-size:13.5px}
 #inboxBanner .tx small{display:block;color:var(--muted);font-size:11.5px;margin-top:1px}
 #inboxBanner .act{display:flex;gap:7px;flex:0 0 auto}
+
+/* ===== Login (autenticação real do Firebase) ===== */
+.login{position:fixed;inset:0;z-index:90;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:24px}
+.login.hide{display:none}
+.login::before{content:"";position:absolute;inset:0;background:
+   radial-gradient(60% 50% at 80% 0%,rgba(140,29,24,.22),transparent 60%),
+   radial-gradient(50% 40% at 0% 100%,rgba(140,29,24,.14),transparent 55%)}
+.login-card{position:relative;width:100%;max-width:380px;background:var(--surface);border-radius:16px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5);border-top:4px solid var(--red)}
+.login-card .lc-head{padding:30px 30px 22px;text-align:center;border-bottom:1px solid var(--line);position:relative}
+.login-card .lc-head::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:linear-gradient(90deg,var(--red) 0 33%,var(--gray) 33% 66%,var(--red) 66% 100%)}
+.login-card .lc-head .ttl{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--red);font-weight:800}
+.login-card .lc-head .sub{font-size:12px;color:var(--muted);margin-top:4px}
+.login-card .lc-body{padding:26px 30px 30px}
+.login-card .lc-body .f{margin-bottom:14px}
+.login-card .lc-body .f input.din{font-weight:600}
+.login-card .submit{width:100%;margin-top:6px;justify-content:center;padding:12px}
+.login-err{display:none;background:var(--red-soft);color:var(--red-d);border:1px solid #f1c9c7;border-radius:9px;padding:10px 12px;font-size:12.5px;font-weight:600;margin-bottom:14px}
+.login-err.on{display:block}
+.login-mode{margin-top:16px;text-align:center;font-size:11px;color:var(--muted)}
+.login-mode b{font-weight:700}
 </style>
 </head>
 <body>
+
+<div class="login" id="loginScreen">
+  <div class="login-card">
+    <div class="lc-head">
+      <div class="ttl">RM · Compras</div>
+      <div class="sub">Acesso restrito · Painel de compras</div>
+    </div>
+    <div class="lc-body">
+      <div class="login-err" id="loginErr"></div>
+      <div class="f">
+        <span class="lab">E-mail</span>
+        <input id="li_user" class="din" type="email" autocomplete="username" placeholder="voce@empresa.com" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="f">
+        <span class="lab">Senha</span>
+        <input id="li_pass" class="din" type="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn red submit" id="loginBtn" onclick="doLogin()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+        Entrar
+      </button>
+      <div class="login-mode" id="loginMode"></div>
+    </div>
+  </div>
+</div>
 
 <div class="appbar" id="appbar">
   <div class="in">
@@ -333,6 +378,9 @@ textarea.din{resize:vertical;min-height:58px}
         <button class="btn" onclick="fbForcePush()">☁︎ Enviar tudo à nuvem</button>
         <button class="btn" onclick="fbForcePull()">⬇ Baixar tudo da nuvem</button>
         <p class="note" id="menuStat"></p>
+        <hr style="border:0;border-top:1px solid var(--line-2);margin:4px 0">
+        <p class="note" id="whoLabel" style="margin:0 0 2px"></p>
+        <button class="btn" onclick="doLogout()">⎋ Sair</button>
       </div>
     </div>
     <div class="mfoot"><button class="btn ghost" onclick="closeMenu()">Fechar</button></div>
@@ -345,6 +393,7 @@ textarea.din{resize:vertical;min-height:58px}
      depois que o Firebase carrega. -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
 <script>
 /* ============ estado / persistência ============ */
@@ -717,7 +766,7 @@ function toast(msg){ let el=document.getElementById('toast');
   el.textContent=msg; el.style.opacity='1'; clearTimeout(toastT); toastT=setTimeout(()=>{el.style.opacity='0';},2200); }
 
 /* ============ Firebase (rm-contas / nó compras_rm) ============ */
-const FB={ config:{apiKey:"AIzaSyBDOR9f748UNoGP5c72Y-vdmDBcffM8tMI",databaseURL:"https://rm-contas-default-rtdb.firebaseio.com",appId:"1:414740463069:web:f8035314dcfbf962c80a34"}, node:'compras_rm', ref:null, ready:false, applying:false, booting:true, timer:null };
+const FB={ config:{apiKey:"AIzaSyBDOR9f748UNoGP5c72Y-vdmDBcffM8tMI",authDomain:"rm-contas.firebaseapp.com",databaseURL:"https://rm-contas-default-rtdb.firebaseio.com",projectId:"rm-contas",storageBucket:"rm-contas.firebasestorage.app",messagingSenderId:"414740463069",appId:"1:414740463069:web:f8035314dcfbf962c80a34"}, node:'compras_rm', ref:null, ready:false, applying:false, booting:true, timer:null };
 function setSync(state){ const c=document.getElementById('syncChip'); if(!c)return;
   const map={ok:['● nuvem','#e7f3ec','#1f7a4d'],saving:['● salvando…','#fdf3e2','#b4690e'],off:['● local','#f7f8f9','#6c7480'],pend:['● pendente','#fdf3e2','#b4690e']};
   const m=map[state]||map.off; c.textContent=m[0]; c.style.background=m[1]; c.style.color=m[2]; }
@@ -762,8 +811,8 @@ function importarInbox(){
   toast(n+' compra(s) importada(s) — defina entrada e parcelas');
 }
 
-function fbInit(){ try{ if(!window.firebase||!firebase.initializeApp){ setSync('off'); return; }
-  firebase.initializeApp(FB.config); FB.ref=firebase.database().ref(FB.node); FB.ready=true; setSync('saving');
+function fbInit(){ try{ if(!window.firebase||!firebase.database){ setSync('off'); return; }
+  FB.ref=firebase.database().ref(FB.node); FB.ready=true; setSync('saving');
   watchInbox();
   FB.ref.on('value',snap=>{ const v=snap.val(); if(!v){ if((DB.compras||[]).length)fbPush(); else setSync('ok'); return; }
     const remote=v._updatedAt||0, local=DB._editedAt||0; if(remote>=local){fbApply(v);}else{fbPush();} },err=>{setSync('off');});
@@ -776,10 +825,53 @@ function fbQueuePush(){ if(!FB.ready||FB.applying||FB.booting)return; setSync('s
 function fbForcePush(){ if(!FB.ready){toast('Nuvem indisponível');return;} fbPush(); toast('Enviado à nuvem'); closeMenu(); }
 function fbForcePull(){ if(!FB.ready||!FB.ref){toast('Nuvem indisponível');return;} FB.ref.once('value').then(s=>{const v=s.val(); if(v){fbApply(v);toast('Baixado da nuvem');} else toast('Nuvem vazia');}); closeMenu(); }
 function fbStatusClick(){ if(!FB.ready){toast('Sincronização offline — dados salvos só neste aparelho');return;} fbForcePull(); }
+function fbTeardown(){
+  clearTimeout(FB.timer);
+  if(FB.ref){ try{ FB.ref.off(); }catch(e){} }
+  try{ const ir=inboxRef(); if(ir) ir.off(); }catch(e){}
+  FB.ref=null; FB.ready=false; FB.applying=false; FB.booting=true;
+}
+
+/* ============ auth (login real via Firebase) ============ */
+function showLogin(show){ const el=document.getElementById('loginScreen'); if(el) el.classList.toggle('hide', !show); }
+function setWho(label){ const el=document.getElementById('whoLabel'); if(el) el.textContent = label ? ('Conectado como '+label) : ''; }
+function authMsg(code){
+  const m={'auth/invalid-email':'E-mail inválido.','auth/user-not-found':'Usuário não encontrado.',
+    'auth/wrong-password':'Senha incorreta.','auth/invalid-credential':'E-mail ou senha incorretos.',
+    'auth/too-many-requests':'Muitas tentativas. Aguarde um momento.','auth/network-request-failed':'Sem conexão.'};
+  return m[code]||'Não foi possível entrar. Tente novamente.';
+}
+function doLogin(){
+  const u=(document.getElementById('li_user').value||'').trim(), p=document.getElementById('li_pass').value;
+  const err=document.getElementById('loginErr'); err.classList.remove('on');
+  if(!window.firebase||!firebase.auth){ err.textContent='Sincronização indisponível. Verifique sua conexão.'; err.classList.add('on'); return; }
+  if(!u||!p){ err.textContent='Informe e-mail e senha.'; err.classList.add('on'); return; }
+  const btn=document.getElementById('loginBtn'); btn.disabled=true;
+  firebase.auth().signInWithEmailAndPassword(u,p)
+    .then(()=>{ err.classList.remove('on'); })
+    .catch(e=>{ err.textContent=authMsg(e.code); err.classList.add('on'); })
+    .finally(()=>{ btn.disabled=false; });
+}
+function doLogout(){ closeMenu(); if(window.firebase&&firebase.auth) firebase.auth().signOut(); }
+function onAuthed(label){ showLogin(false); setWho(label); startApp(); }
+function startApp(){ load(); applyCfg(); render(); FB.booting=false; fbInit(); }
+function initAuth(){
+  if(!window.firebase||!firebase.initializeApp||!firebase.auth){
+    document.getElementById('loginMode').innerHTML='Erro ao carregar autenticação. Verifique sua conexão.';
+    showLogin(true); return;
+  }
+  try{
+    firebase.initializeApp(FB.config);
+    document.getElementById('loginMode').innerHTML='Entre com seu e-mail e senha cadastrados.';
+    firebase.auth().onAuthStateChanged(u=>{
+      if(u){ onAuthed(u.email); }
+      else{ fbTeardown(); showLogin(true); }
+    });
+  }catch(e){ console.error(e); document.getElementById('loginMode').innerHTML='Erro ao iniciar autenticação.'; showLogin(true); }
+}
 
 /* ============ boot ============ */
-load(); applyCfg(); render();
-FB.booting=false; fbInit();
+initAuth();
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o){ o.classList.remove('open'); } }));
 if(window.addEventListener){ window.addEventListener('pagehide',()=>save(false)); }
 if('serviceWorker' in navigator){
