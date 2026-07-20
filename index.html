@@ -10,8 +10,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
 :root{
   --red:#8c1d18; --red-d:#701511; --red-soft:#f7ebea;
@@ -340,6 +338,13 @@ textarea.din{resize:vertical;min-height:58px}
     <div class="mfoot"><button class="btn ghost" onclick="closeMenu()">Fechar</button></div>
   </div>
 </div>
+
+<!-- Firebase carregado aqui (fim do body) e não no <head>: assim a tela
+     aparece na hora e não fica em branco esperando o gstatic.com. A ordem
+     de inicialização não muda — o script do app abaixo continua rodando
+     depois que o Firebase carrega. -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <script>
 /* ============ estado / persistência ============ */
