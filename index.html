@@ -782,7 +782,10 @@ load(); applyCfg(); render();
 FB.booting=false; fbInit();
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o){ o.classList.remove('open'); } }));
 if(window.addEventListener){ window.addEventListener('pagehide',()=>save(false)); }
-if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+if('serviceWorker' in navigator){
+  if(location.protocol.startsWith('http')){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+  else { navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{}); }
+}
 </script>
 <!-- Ajuste de tela (mobile) -->
 <script>
